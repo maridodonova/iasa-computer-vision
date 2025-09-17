@@ -1,1 +1,6 @@
+# VS Code
 .vscode/
+
+# Data
+data/*
+! data/lab1/pugs.jpg

@@ -3,12 +3,21 @@ name = "iasa-computer-vision"
 version = "0.1.0"
 description = "Labs for the IASA Computer Vision course."
 authors = [
-    {name = "Mariia Dodonova"}
+    {name = "Mariia Dodonova",email = "maridodonova@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.14"
 dependencies = [
+    "numpy (==2.2.4)",
+    "matplotlib (>=3.10.6,<4.0.0)",
+    "opencv-python (>=4.12.0.88,<5.0.0.0)",
+    "notebook (>=7.4.5,<8.0.0)",
+    "ipykernel (>=6.30.1,<7.0.0)"
 ]
+
+
+[tool.poetry]
+package-mode = false
 
 
 [build-system]
