@@ -1,0 +1,7 @@
+name: iasa-computer-vision-env
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - cuda
+prefix: C:\Users\marid\miniconda3\envs\iasa-computer-vision-env
