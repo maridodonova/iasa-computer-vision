@@ -3,7 +3,7 @@ import torch
 from torch.nn.functional import conv2d
 
 
-def convolve(matrix, kernel, stride=(1, 1), padding=(0, 0)):
+def convolve(matrix, kernel, stride:tuple = (1, 1), padding: tuple = (0, 0)):
     # Get heights and widths of matrix, kernel, stride and padding
     matrix_h, matrix_w = matrix.shape
     kernel_h, kernel_w = kernel.shape
@@ -39,14 +39,14 @@ def min_max_normalize(image):
     return (image - min_v) / (max_v - min_v)
 
 
-def apply_filters(image, filters, to_numpy=True):
+def apply_filters(image, filters: dict, to_numpy: bool = True) -> dict:
     # Split the image into 3 channels
     channels = [image[:, i, :, :].unsqueeze(0) for i in range(3)]
 
     results = {}
-    for name in filters:
+    for name, filter in filters.items():
         # Apply filter to each channel of the image
-        filtered_channels = [conv2d(c, filters[name], padding=1) for c in channels]
+        filtered_channels = [conv2d(c, filter, padding=1) for c in channels]
 
         # Concatenate all channels, remove the batch dimension and change the shape
         image = torch.cat(filtered_channels, dim=1).squeeze(0).permute(1, 2, 0)

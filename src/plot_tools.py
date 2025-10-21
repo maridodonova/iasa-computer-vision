@@ -9,7 +9,7 @@ def imshow(image, title: str | None = None) -> None:
     plt.show()
 
 
-def plot_history(history):
+def plot_history(history: dict) -> None:
     n_plots = len(history)
     plt.figure(figsize=(5 * n_plots, 3))
 
