@@ -1,4 +1,7 @@
-__pycache__
-.ipynb_checkpoints
-data/*
+*__pycache__
+*.ipynb_checkpoints
+
+data/
 !data/lab1/
+
+lab[4-8].ipynb
