@@ -5,10 +5,10 @@ class Trainer:
     def __init__(
         self,
         model: torch.nn.Module,
-        optimizer,
+        optimizer: torch.optim.Optimizer,
         criterion: torch.nn.Module,
         device: str = "cpu"
-    ):
+    ) -> None:
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
@@ -20,12 +20,12 @@ class Trainer:
             "loss": {"train": [], "val": []},
             "accuracy": {"train": [], "val": []}
         }
-    
+
     def _run_epoch(
             self,
             loader: torch.utils.data.DataLoader,
             validation: bool = False
-        ) -> None:
+    ) -> None:
         # Set mode
         if validation:
             self.model.eval()
@@ -67,7 +67,7 @@ class Trainer:
             train_loader: torch.utils.data.DataLoader,
             val_loader: torch.utils.data.DataLoader,
             verbose: bool = True
-        ) -> dict:
+    ) -> dict:
         for epoch in range(num_epochs):
             self._run_epoch(train_loader)
             self._run_epoch(val_loader, validation=True)

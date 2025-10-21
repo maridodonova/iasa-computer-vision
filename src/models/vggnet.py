@@ -1,9 +1,9 @@
+import torch
 import torch.nn as nn
 
 
 class VGGNet(nn.Module):
-
-    def __init__(self):
+    def __init__(self) -> None:
         super(VGGNet, self).__init__()
         self.features = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=3, padding=1),
@@ -44,7 +44,7 @@ class VGGNet(nn.Module):
             nn.Linear(4096, 10)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
         x = self.classifier(x)
         return x
