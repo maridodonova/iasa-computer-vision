@@ -5,7 +5,7 @@ from src.models.blocks import ResBlock
 
 class ResNet(nn.Module):
     def __init__(self) -> None:
-        super(ResNet, self).__init__()
+        super().__init__()
         self.initial = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3),
             nn.BatchNorm2d(64),
