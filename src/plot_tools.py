@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-def imshow(image, title: str | None = None) -> None:
+def imshow(image: np.ndarray, title: str | None = None) -> None:
     plt.imshow(image)
     if title:
         plt.title(title)

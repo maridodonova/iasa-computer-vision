@@ -3,7 +3,12 @@ import torch
 from torch.nn.functional import conv2d
 
 
-def convolve(matrix, kernel, stride:tuple = (1, 1), padding: tuple = (0, 0)):
+def convolve(
+        matrix: np.ndarray,
+        kernel: np.ndarray,
+        stride: tuple = (1, 1),
+        padding: tuple = (0, 0)
+    ) -> np.ndarray:
     # Get heights and widths of matrix, kernel, stride and padding
     matrix_h, matrix_w = matrix.shape
     kernel_h, kernel_w = kernel.shape
@@ -32,14 +37,14 @@ def convolve(matrix, kernel, stride:tuple = (1, 1), padding: tuple = (0, 0)):
     return output
 
 
-def min_max_normalize(image):
+def min_max_normalize(image: np.ndarray) -> np.ndarray:
     min_v = image.min(axis=(0, 1)).reshape(1, 1, 3)
     max_v = image.max(axis=(0, 1)).reshape(1, 1, 3)
 
     return (image - min_v) / (max_v - min_v)
 
 
-def apply_filters(image, filters: dict, to_numpy: bool = True) -> dict:
+def apply_filters(image: np.ndarray, filters: dict, to_numpy: bool = True) -> dict:
     # Split the image into 3 channels
     channels = [image[:, i, :, :].unsqueeze(0) for i in range(3)]
 
