@@ -58,8 +58,13 @@ class VGG13(nn.Module):
 
 
 class VGG13SE(VGG13):
-    def __init__(self, reduction: int) -> None:
-        super().__init__()
+    def __init__(
+            self,
+            in_channels: int,
+            num_classes: int,
+            reduction: int
+    ) -> None:
+        super().__init__(in_channels=in_channels, num_classes=num_classes)
         self.se_12 = SEBlock(in_channels=64, reduction=reduction)
         self.se_23 = SEBlock(in_channels=128, reduction=reduction)
         self.se_34 = SEBlock(in_channels=256, reduction=reduction)
@@ -80,8 +85,13 @@ class VGG13SE(VGG13):
 
 
 class VGG13CBAM(VGG13):
-    def __init__(self, reduction: int) -> None:
-        super().__init__()
+    def __init__(
+            self,
+            in_channels: int,
+            num_classes: int,
+            reduction: int
+    ) -> None:
+        super().__init__(in_channels=in_channels, num_classes=num_classes)
         self.cbam_12 = CBAM(in_channels=64, reduction=reduction)
         self.cbam_23 = CBAM(in_channels=128, reduction=reduction)
         self.cbam_34 = CBAM(in_channels=256, reduction=reduction)
