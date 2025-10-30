@@ -3,44 +3,18 @@ import torch.nn as nn
 from src.models.blocks import SEBlock, CBAM
 
 
-class VGGNet(nn.Module):
-    def __init__(self) -> None:
+class VGG13(nn.Module):
+    def __init__(
+            self,
+            in_channels: int,
+            num_classes: int
+    ) -> None:
         super().__init__()
-        self.block_1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.block_2 = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.block_3 = nn.Sequential(
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.block_4 = nn.Sequential(
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.block_5 = nn.Sequential(
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
+        self.block_1 = self._make_block(in_channels, 64, n_convs=2)
+        self.block_2 = self._make_block(64, 128, n_convs=2)
+        self.block_3 = self._make_block(128, 256, n_convs=2)
+        self.block_4 = self._make_block(256, 512, n_convs=2)
+        self.block_5 = self._make_block(512, 512, n_convs=2)
 
         self.classifier = nn.Sequential(
             nn.Flatten(),
@@ -50,8 +24,28 @@ class VGGNet(nn.Module):
             nn.Linear(4096, 4096),
             nn.ReLU(),
             nn.Dropout(),
-            nn.Linear(4096, 10)
+            nn.Linear(4096, num_classes)
         )
+
+    def _make_block(
+            self,
+            in_channels: int,
+            out_channels: int,
+            n_convs: int
+    ) -> nn.Sequential:
+        layers = []
+
+        for _ in range(n_convs):
+            layers += [
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1), 
+                nn.ReLU()
+            ]
+            in_channels = out_channels
+
+        layers += [nn.MaxPool2d(kernel_size=2)]
+
+        return nn.Sequential(*layers)
+
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.block_1(x)
@@ -63,7 +57,7 @@ class VGGNet(nn.Module):
         return x
 
 
-class VGGNetSE(VGGNet):
+class VGG13SE(VGG13):
     def __init__(self, reduction: int) -> None:
         super().__init__()
         self.se_12 = SEBlock(in_channels=64, reduction=reduction)
@@ -85,13 +79,13 @@ class VGGNetSE(VGGNet):
         return x
 
 
-class VGGNetCBAM(VGGNet):
+class VGG13CBAM(VGG13):
     def __init__(self, reduction: int) -> None:
         super().__init__()
-        self.cbam_12 = SEBlock(in_channels=64, reduction=reduction)
-        self.cbam_23 = SEBlock(in_channels=128, reduction=reduction)
-        self.cbam_34 = SEBlock(in_channels=256, reduction=reduction)
-        self.cbam_45 = SEBlock(in_channels=512, reduction=reduction)
+        self.cbam_12 = CBAM(in_channels=64, reduction=reduction)
+        self.cbam_23 = CBAM(in_channels=128, reduction=reduction)
+        self.cbam_34 = CBAM(in_channels=256, reduction=reduction)
+        self.cbam_45 = CBAM(in_channels=512, reduction=reduction)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.block_1(x)

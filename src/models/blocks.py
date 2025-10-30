@@ -83,7 +83,7 @@ class ChannelAttentionModule(nn.Module):
             self,
             in_channels: int,
             reduction: int
-        ) -> None:
+    ) -> None:
         super().__init__()
 
         assert reduction >= 1, "reduction must be >= 1"
