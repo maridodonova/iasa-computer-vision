@@ -99,8 +99,8 @@ class Trainer:
 
         if verbose:
             print(
-                f"Loss: {self.__test_history['loss'][-1]:.4f}",
-                f"Accuracy: {self.__test_history['accuracy'][-1]:.4f}"
+                f"Loss: {self.__test_history['loss'][-1]:.4f},",
+                f"Accuracy: {self.__test_history['accuracy'][-1]:.4f}."
             )
 
         return self.__test_history.copy()
