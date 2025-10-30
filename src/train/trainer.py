@@ -1,4 +1,5 @@
 import torch
+import src.train.metrics.metrics as metrics
 
 
 class Trainer:
@@ -16,11 +17,10 @@ class Trainer:
         self.device = device
         self.model = model.to(self.device)
 
-        self._train_history = {
-            "loss": { "train": [], "val": [] },
-            "accuracy": { "train": [], "val": [] }
+        self._metrics = {
+            mode: { "loss": metrics.Loss(), "accuracy": metrics.Accuracy() }
+            for mode in ["train", "val", "test"]
         }
-        self._test_history = { "loss": [], "accuracy": [] }
 
     def _run_epoch(
             self,
@@ -33,40 +33,29 @@ class Trainer:
         else:
             self.model.eval()
 
-        # Init counters
-        running_loss = 0.0
-        correct, total = 0, 0
+        for metric in self._metrics[mode].values():
+            metric.clear()
 
         for images, labels in loader:
             images, labels = images.to(self.device), labels.to(self.device)
 
             if mode == "train":
                 self.optimizer.zero_grad()
-                outputs = self.model(images)
-                loss = self.criterion(outputs, labels)
+                logits = self.model(images)
+                loss = self.criterion(logits, labels)
                 loss.backward()
                 self.optimizer.step()
             else:
                 with torch.no_grad():
-                    outputs = self.model(images)
-                    loss = self.criterion(outputs, labels)
+                    logits = self.model(images)
+                    loss = self.criterion(logits, labels)
 
-            running_loss += loss.item()
+            self._metrics[mode]["loss"].update(loss)
+            self._metrics[mode]["accuracy"].update(logits, labels)
 
-            _, predicted = torch.max(outputs.data, dim=1)
-            correct += (predicted == labels).sum().item()
-            total += labels.size(0)
+        for metric in self._metrics[mode].values():
+            metric.compute()
 
-        epoch_loss = running_loss / len(loader)
-        accuracy = correct / total
-
-        # Update history
-        if mode == "test":
-            self._test_history["loss"].append(epoch_loss)
-            self._test_history["accuracy"].append(accuracy)
-        else:
-            self._train_history["loss"][mode].append(epoch_loss)
-            self._train_history["accuracy"][mode].append(accuracy)
 
     def train(
             self,
@@ -79,16 +68,21 @@ class Trainer:
             self._run_epoch(train_loader)
             self._run_epoch(val_loader, mode="val")
 
+            train_history = { "loss": {}, "accuracy": {} }
+            for mode in ["train", "val"]:
+                for name, metric in self._metrics[mode].items():
+                    train_history[name][mode] = metric.get_history()
+
             if verbose:
                 print(
                     f"Epoch [{epoch+1:2d}/{num_epochs}]:",
-                    f"Train Loss: {self._train_history['loss']['train'][-1]:.4f},",
-                    f"Val Loss: {self._train_history['loss']['val'][-1]:.4f},",
-                    f"Train Accuracy: {self._train_history['accuracy']['train'][-1]:.4f},",
-                    f"Val Accuracy: {self._train_history['accuracy']['val'][-1]:.4f}."
+                    f"Train Loss: {train_history['loss']['train'][-1]:.4f},",
+                    f"Val Loss: {train_history['loss']['val'][-1]:.4f},",
+                    f"Train Accuracy: {train_history['accuracy']['train'][-1]:.4f},",
+                    f"Val Accuracy: {train_history['accuracy']['val'][-1]:.4f}."
                 )
 
-        return self._train_history.copy()
+        return train_history
     
     def test(
             self,
@@ -97,10 +91,12 @@ class Trainer:
     ) -> dict:
         self._run_epoch(test_loader, mode="test")
 
+        test_history = { name: metric.get_history() for name, metric in self._metrics["test"].items() }
+
         if verbose:
             print(
-                f"Loss: {self._test_history['loss'][-1]:.4f},",
-                f"Accuracy: {self._test_history['accuracy'][-1]:.4f}."
+                f"Loss: {test_history['loss'][-1]:.4f},",
+                f"Accuracy: {test_history['accuracy'][-1]:.4f}."
             )
 
-        return self._test_history.copy()
+        return test_history
