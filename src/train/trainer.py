@@ -1,5 +1,5 @@
 import torch
-import src.train.metrics.metrics as metrics
+from src.train.metrics.metric_collection import MetricCollection
 
 
 class Trainer:
@@ -17,10 +17,7 @@ class Trainer:
         self.device = device
         self.model = model.to(self.device)
 
-        self._metrics = {
-            mode: { "loss": metrics.Loss(), "accuracy": metrics.Accuracy() }
-            for mode in ["train", "val", "test"]
-        }
+        self._metrics = { mode: MetricCollection(["loss", "accuracy"]) for mode in ["train", "val", "test"] }
 
     def _run_epoch(
             self,
@@ -33,8 +30,7 @@ class Trainer:
         else:
             self.model.eval()
 
-        for metric in self._metrics[mode].values():
-            metric.clear()
+        self._metrics[mode].clear()
 
         for images, labels in loader:
             images, labels = images.to(self.device), labels.to(self.device)
@@ -50,11 +46,12 @@ class Trainer:
                     logits = self.model(images)
                     loss = self.criterion(logits, labels)
 
-            self._metrics[mode]["loss"].update(loss)
-            self._metrics[mode]["accuracy"].update(logits, labels)
+            self._metrics[mode].update({
+                "loss": { "value": loss },
+                "accuracy": { "logits": logits, "refs": labels }
+            })
 
-        for metric in self._metrics[mode].values():
-            metric.compute()
+        self._metrics[mode].compute()
 
 
     def train(
@@ -68,21 +65,18 @@ class Trainer:
             self._run_epoch(train_loader)
             self._run_epoch(val_loader, mode="val")
 
-            train_history = { "loss": {}, "accuracy": {} }
-            for mode in ["train", "val"]:
-                for name, metric in self._metrics[mode].items():
-                    train_history[name][mode] = metric.get_history()
+            history = { mode: self._metrics[mode].get_history() for mode in ["train", "val"] }
 
             if verbose:
                 print(
                     f"Epoch [{epoch+1:2d}/{num_epochs}]:",
-                    f"Train Loss: {train_history['loss']['train'][-1]:.4f},",
-                    f"Val Loss: {train_history['loss']['val'][-1]:.4f},",
-                    f"Train Accuracy: {train_history['accuracy']['train'][-1]:.4f},",
-                    f"Val Accuracy: {train_history['accuracy']['val'][-1]:.4f}."
+                    f"Train Loss: {history['train']['loss'][-1]:.4f},",
+                    f"Val Loss: {history['val']['loss'][-1]:.4f},",
+                    f"Train Accuracy: {history['train']['accuracy'][-1]:.4f},",
+                    f"Val Accuracy: {history['val']['accuracy'][-1]:.4f}."
                 )
 
-        return train_history
+        return history
     
     def test(
             self,
@@ -91,12 +85,12 @@ class Trainer:
     ) -> dict:
         self._run_epoch(test_loader, mode="test")
 
-        test_history = { name: metric.get_history() for name, metric in self._metrics["test"].items() }
+        history = self._metrics["test"].get_history()
 
         if verbose:
             print(
-                f"Loss: {test_history['loss'][-1]:.4f},",
-                f"Accuracy: {test_history['accuracy'][-1]:.4f}."
+                f"Loss: {history['loss'][-1]:.4f},",
+                f"Accuracy: {history['accuracy'][-1]:.4f}."
             )
 
-        return test_history
+        return history
