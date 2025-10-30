@@ -16,11 +16,11 @@ class Trainer:
         self.device = device
         self.model = model.to(self.device)
 
-        self.__train_history = {
+        self._train_history = {
             "loss": { "train": [], "val": [] },
             "accuracy": { "train": [], "val": [] }
         }
-        self.__test_history = { "loss": [], "accuracy": [] }
+        self._test_history = { "loss": [], "accuracy": [] }
 
     def _run_epoch(
             self,
@@ -62,11 +62,11 @@ class Trainer:
 
         # Update history
         if mode == "test":
-            self.__test_history["loss"].append(epoch_loss)
-            self.__test_history["accuracy"].append(accuracy)
+            self._test_history["loss"].append(epoch_loss)
+            self._test_history["accuracy"].append(accuracy)
         else:
-            self.__train_history["loss"][mode].append(epoch_loss)
-            self.__train_history["accuracy"][mode].append(accuracy)
+            self._train_history["loss"][mode].append(epoch_loss)
+            self._train_history["accuracy"][mode].append(accuracy)
 
     def train(
             self,
@@ -82,13 +82,13 @@ class Trainer:
             if verbose:
                 print(
                     f"Epoch [{epoch+1:2d}/{num_epochs}]:",
-                    f"Train Loss: {self.__train_history['loss']['train'][-1]:.4f},",
-                    f"Val Loss: {self.__train_history['loss']['val'][-1]:.4f},",
-                    f"Train Accuracy: {self.__train_history['accuracy']['train'][-1]:.4f},",
-                    f"Val Accuracy: {self.__train_history['accuracy']['val'][-1]:.4f}."
+                    f"Train Loss: {self._train_history['loss']['train'][-1]:.4f},",
+                    f"Val Loss: {self._train_history['loss']['val'][-1]:.4f},",
+                    f"Train Accuracy: {self._train_history['accuracy']['train'][-1]:.4f},",
+                    f"Val Accuracy: {self._train_history['accuracy']['val'][-1]:.4f}."
                 )
 
-        return self.__train_history.copy()
+        return self._train_history.copy()
     
     def test(
             self,
@@ -99,8 +99,8 @@ class Trainer:
 
         if verbose:
             print(
-                f"Loss: {self.__test_history['loss'][-1]:.4f},",
-                f"Accuracy: {self.__test_history['accuracy'][-1]:.4f}."
+                f"Loss: {self._test_history['loss'][-1]:.4f},",
+                f"Accuracy: {self._test_history['accuracy'][-1]:.4f}."
             )
 
-        return self.__test_history.copy()
+        return self._test_history.copy()
